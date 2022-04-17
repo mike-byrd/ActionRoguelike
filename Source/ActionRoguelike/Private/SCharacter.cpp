@@ -10,12 +10,14 @@ ASCharacter::ASCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("Spring Arm Component");
 	SpringArmComponent->SetupAttachment(RootComponent);
 	SpringArmComponent->bUsePawnControlRotation = true;
 	
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComp");
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera Component");
 	CameraComponent->SetupAttachment(SpringArmComponent);
+
+	InteractionComponent = CreateDefaultSubobject<USInteractionComponent>("Interaction Component");
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -48,6 +50,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
 }
 
 void ASCharacter::MoveForward(const float Value)
@@ -72,13 +75,31 @@ void ASCharacter::MoveRight(const float Value)
 
 void ASCharacter::PrimaryAttack()
 {
-	const FVector handLocation = GetMesh()->GetSocketLocation("Muzzle_01");	
-	const FTransform SpawnTransformMatrix = FTransform(GetControlRotation(), handLocation);
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeLapsed, 0.2f);
+
+	// Cancels timer in case the character dies, for example.
+	// GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+}
+
+void ASCharacter::PrimaryAttack_TimeLapsed()
+{
+	const FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");	
+	const FTransform SpawnTransformMatrix = FTransform(GetControlRotation(), HandLocation);
 	FActorSpawnParameters SpawnParams;
 
 	// This will let us specify spawn rules.
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTransformMatrix, SpawnParams);
+}
+
+void ASCharacter::PrimaryInteract()
+{
+	if (InteractionComponent)
+	{
+		InteractionComponent->PrimaryInteract();
+	}
 }
 
