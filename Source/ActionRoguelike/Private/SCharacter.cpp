@@ -91,6 +91,7 @@ void ASCharacter::PrimaryAttack_TimeLapsed()
 
 	// This will let us specify spawn rules.
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Instigator = this;
 	
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTransformMatrix, SpawnParams);
 }
