@@ -2,6 +2,7 @@
 
 
 #include "SCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -11,9 +12,14 @@ ASCharacter::ASCharacter()
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>("SpringArmComp");
 	SpringArmComp->SetupAttachment(RootComponent);
+	SpringArmComp->bUsePawnControlRotation = true;
 	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("CameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	bUseControllerRotationYaw = false;
 }
 
 // Called when the game starts or when spawned
@@ -36,12 +42,29 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ASCharacter::MoveRight);
+	
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 }
 
 void ASCharacter::MoveForward(const float Value)
 {
-	AddMovementInput(GetActorForwardVector(), Value);
+	// We want the character to move in the direction of the camera.	
+	FRotator ControlRot = GetControlRotation();
+	ControlRot.Pitch = 0;
+	ControlRot.Roll = 0;
+	
+	AddMovementInput( ControlRot.Vector(), Value);
+}
+
+void ASCharacter::MoveRight(const float Value)
+{
+	FRotator ControlRot = GetControlRotation();
+	ControlRot.Pitch = 0;
+	ControlRot.Roll = 0;
+
+	const FVector RightVector = FRotationMatrix(ControlRot).GetScaledAxis(EAxis::Y);	
+	AddMovementInput(RightVector, Value);
 }
 
