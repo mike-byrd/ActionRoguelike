@@ -21,14 +21,17 @@ public:
 	ASCharacter();
 
 protected:
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> ProjectileClass;
 	
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* CameraComp;
+	UCameraComponent* CameraComponent;
 
 	// Spring Arm checks for collision and adjusts it's position so it's view isn't obstructed.
 	UPROPERTY(VisibleAnywhere)
-	USpringArmComponent* SpringArmComp;
-	
+	USpringArmComponent* SpringArmComponent;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -41,4 +44,6 @@ public:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+
+	void PrimaryAttack();
 };
